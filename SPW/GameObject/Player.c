@@ -404,7 +404,7 @@ void Player_VM_FixedUpdate(void *self)
     velocity.x = Float_Clamp(velocity.x, -maxHSpeed, maxHSpeed);
 
     // Saut
-    if (player->m_jump)
+    if (player->m_jump & onGround)
     {
         player->m_jump = false;
         velocity.y = 15.0f;
@@ -418,6 +418,7 @@ void Player_VM_FixedUpdate(void *self)
     {
         PE_Body_SetGravityScale(body, 1.0f);
     }
+
     // Rebond sur les ennemis
     if (player->m_bounce)
     {
