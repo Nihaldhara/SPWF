@@ -21,6 +21,7 @@ const void *const Class_Player = &_Class_Player;
 
 float timeJump = 0.0f;
 float timerDelayedJump = 0.1f;
+float timerFallingJump = 0.1f;
 
 void Class_InitPlayer()
 {
@@ -414,21 +415,41 @@ void Player_VM_FixedUpdate(void *self)
         timeJump = g_time->m_currentTime;
     }
 
-    // Barre d'espace appuyée en l'air + moment de l'appui
+    // Saut juste avant contact au sol
     if (player->m_jump && !onGround)
     {
-        player->m_jump = false;
         timerDelayedJump = g_time->m_currentTime;
+        if (g_time->m_currentTime - timerFallingJump > 0.2f)
+        {
+            player->m_jump = false;
+        }
     }
 
-
-    if (onGround && g_time->m_currentTime - timerDelayedJump < 0.1f)
+    if (onGround && g_time->m_currentTime - timerDelayedJump < 0.2f)
     {
         velocity.y = 15.0f;
         timeJump = g_time->m_currentTime;
-        timerDelayedJump = 0.1f;
+        timerDelayedJump = 0.2f;
     }
 
+    //Saut juste après chute libre
+    if (onGround && !player->m_jump)
+    {
+        timerFallingJump = g_time->m_currentTime;
+        if (g_time->m_currentTime - timerDelayedJump > 0.2f)
+        {
+            player->m_jump = false;
+        }
+    }
+
+    if (!onGround && g_time->m_currentTime - timerFallingJump < 0.2f && player->m_jump)
+    {
+        velocity.y = 15.0f;
+        timeJump = g_time->m_currentTime;
+        timerFallingJump = 0.2f;
+    }
+
+    //Saut court/long
     if (controls->jumpDown && g_time->m_currentTime - timeJump < 0.2f)
     {
         PE_Body_SetGravityScale(body, 0.5f);
