@@ -21,7 +21,8 @@ typedef enum PlayerState_e
     PLAYER_WALKING,
     PLAYER_RUNNING,
     PLAYER_SKIDDING,
-    PLAYER_DYING
+    PLAYER_DYING,
+    PLAYER_INVINCIBLE
 } PlayerState;
 
 typedef struct Player_s
@@ -42,6 +43,12 @@ typedef struct Player_s
     int m_lifeCount;
     int m_heartCount;
     int m_fireflyCount;
+    bool m_godMode;
+
+    float m_fallingDelay;
+    float m_jumpingDelay;
+    float m_damageDelay;
+    float m_jumpingTime;
 
 } Player;
 

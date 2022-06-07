@@ -96,7 +96,7 @@ void Spike_OnCollisionStay(PE_Collision *collision)
     {
         Player *player = Object_Cast(otherGameBody, Class_Player);
         Player_Bounce(player);
-        Player_Damage(player);
+        Player_Kill(player);
     }
 }
 

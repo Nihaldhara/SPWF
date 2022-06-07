@@ -19,10 +19,6 @@ void Player_VM_Update(void *self);
 static PlayerClass _Class_Player = { 0 };
 const void *const Class_Player = &_Class_Player;
 
-float timeJump = 0.0f;
-float timerDelayedJump = 0.1f;
-float timerFallingJump = 0.1f;
-
 void Class_InitPlayer()
 {
     if (!Class_IsInitialized(Class_Player))
@@ -169,6 +165,14 @@ void Player_CreateAnimator(Player *player, void *scene)
     anim = RE_Animator_CreateTextureAnim(animator, "Dying", part);
     AssertNew(anim);
     RE_Animation_SetCycleCount(anim, -1);
+
+    //Animation "God Mode"
+    part = RE_Animator_CreateAlphaAnim(animator, "God Mode", 0.5, 1);
+
+    AssertNew(anim);
+    RE_Animation_AddFlags(anim, RE_ANIM_ALTERNATE);
+    RE_Animation_SetCycleTime(anim, 0.3f);
+    RE_Animation_SetCycleCount(anim, -1);
 }
 
 void Player_Constructor(void *self, void *scene)
@@ -185,7 +189,13 @@ void Player_Constructor(void *self, void *scene)
 
     player->m_lifeCount = 5;
     player->m_fireflyCount = 0;
-    player->m_heartCount = 2;
+    player->m_heartCount = 3;
+    player->m_godMode = false;
+
+    player->m_jumpingDelay = 0.0f;
+    player->m_fallingDelay = 0.0f;
+    player->m_damageDelay = 2.0f;
+    player->m_jumpingTime = 0.0f;
 
     // Le joueur doit être réinitialisé à chaque fois qu'il meurt
     Scene_SetToRespawn(scene, player, true);
@@ -240,7 +250,8 @@ void Player_VM_Start(void *self)
 void Player_Damage(Player *player)
 {
     // Méthode appellée par un ennemi qui touche le joueur
-    Player_Kill(player);
+    player->m_heartCount--;
+    player->m_godMode = true;
 }
 
 void Player_Kill(Player *player)
@@ -273,7 +284,7 @@ void Player_WakeUpSurroundings(Player *player)
 {
     // Fonction utilisée pour réveiller les corps autour du joueur.
     // Cela permet d'optimiser le jeu pour ne simuler que les corps
-    // proche du joueur.
+    // proches du joueur.
     PE_Body *body = GameBody_GetBody((GameBody *)player);
     PE_Vec2 position = PE_Body_GetPosition(body);
 
@@ -305,6 +316,12 @@ void Player_VM_FixedUpdate(void *self)
 
     // Tue le joueur s'il tombe dans un trou
     if (position.y < -2.0f)
+    {
+        Player_Kill(player);
+        return;
+    }
+    // Tue le joueur s'il n'a plus de vies
+    if (player->m_heartCount <= 0)
     {
         Player_Kill(player);
         return;
@@ -343,7 +360,7 @@ void Player_VM_FixedUpdate(void *self)
         onGround = true;
         gndNormal = hitR.normal;
     }
-
+    
     //--------------------------------------------------------------------------
     // Etat du joueur
 
@@ -382,7 +399,15 @@ void Player_VM_FixedUpdate(void *self)
         }
     }
 
-
+    //Si le joueur a été touché par un ennemi, il a deux secondes d'invincibilité
+    /*if (player->m_godMode & player->m_damageDelay >= 0.0f)
+    {
+        player->m_state = PLAYER_INVINCIBLE;
+    }
+    else
+    {
+        player->m_godMode = false;
+    }*/
 
     // Orientation du joueur
     // Utilisez player->m_hDirection qui vaut :
@@ -407,52 +432,62 @@ void Player_VM_FixedUpdate(void *self)
     float maxHSpeed = 9.f;
     velocity.x = Float_Clamp(velocity.x, -maxHSpeed, maxHSpeed);
 
-    // Saut classique + temps du saut
+
+    ///////////////////////
+    //player->m_delay = 0.3f;
+
+    //player->m_delay -= Scene_GetFixedTimeStep(scene);
+
+
+    //////////////////////
+
+    player->m_jumpingDelay -= Scene_GetFixedTimeStep(scene);
+    player->m_fallingDelay -= Scene_GetFixedTimeStep(scene);
+    player->m_damageDelay -= Scene_GetFixedTimeStep(scene);
+    player->m_jumpingTime += Scene_GetFixedTimeStep(scene);
+
+    printf("jumpingDelay = %f ", player->m_jumpingDelay);
+    printf("fallingDelay = %f\n", player->m_fallingDelay);
+    //printf("damageDelay = %f\n", player->m_damageDelay);
+
+    // Saut classique
     if (player->m_jump & onGround)
     {
         player->m_jump = false;
         velocity.y = 15.0f;
-        timeJump = g_time->m_currentTime;
+        player->m_jumpingTime = 0.3f;
     }
 
     // Saut juste avant contact au sol
-    if (player->m_jump && !onGround)
+    if (player->m_jump & !onGround)
     {
-        timerDelayedJump = g_time->m_currentTime;
-        if (g_time->m_currentTime - timerFallingJump > 0.2f)
-        {
-            player->m_jump = false;
-        }
+        player->m_jumpingDelay = 0.3f;
     }
 
-    if (onGround && g_time->m_currentTime - timerDelayedJump < 0.2f)
+    if (onGround & player->m_jumpingDelay >= 0.0f)
     {
         velocity.y = 15.0f;
-        timeJump = g_time->m_currentTime;
-        timerDelayedJump = 0.2f;
+        player->m_jumpingTime = 0.3f;
+        player->m_jump = false;
     }
 
     //Saut juste après chute libre
-    if (onGround && !player->m_jump)
+    if (onGround & !player->m_jump)
     {
-        timerFallingJump = g_time->m_currentTime;
-        if (g_time->m_currentTime - timerDelayedJump > 0.2f)
-        {
-            player->m_jump = false;
-        }
+        player->m_fallingDelay = 0.3f;
     }
 
-    if (!onGround && g_time->m_currentTime - timerFallingJump < 0.2f && player->m_jump)
+    if (!onGround && player->m_jump && player->m_fallingDelay >= 0.0f)
     {
         velocity.y = 15.0f;
-        timeJump = g_time->m_currentTime;
-        timerFallingJump = 0.2f;
+        player->m_jumpingTime = 0.3f;
+        player->m_jump = false;
     }
 
     //Saut court/long
-    if (controls->jumpDown && g_time->m_currentTime - timeJump < 0.2f)
+    if (controls->jumpDown & player->m_jumpingTime > 0.3f)
     {
-        PE_Body_SetGravityScale(body, 0.5f);
+        PE_Body_SetGravityScale(body, 0.6f);
     }
     else
     {
@@ -485,7 +520,7 @@ void Player_VM_OnRespawn(void *self)
     PE_Body_SetPosition(body, GameBody_GetStartPosition(player));
     PE_Body_SetVelocity(body, PE_Vec2_Zero);
 
-    player->m_heartCount = 2;
+    player->m_heartCount = 3;
     player->m_state = PLAYER_IDLE;
     player->m_hDirection = 0.0f;
 

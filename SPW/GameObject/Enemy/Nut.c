@@ -162,8 +162,11 @@ void Nut_OnCollisionStay(PE_Collision *collision)
     if (PE_Collider_CheckCategory(otherCollider, FILTER_PLAYER))
     {
         Player *player = Object_Cast(otherGameBody, Class_Player);
-
         float angle = PE_Vec2_AngleDeg(manifold.normal, PE_Vec2_Down);
+        if (player->m_godMode)
+        {
+            return;
+        }
         if (angle > 55.0f)
         {
             Player_Damage(player);
