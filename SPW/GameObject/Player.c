@@ -19,6 +19,9 @@ void Player_VM_Update(void *self);
 static PlayerClass _Class_Player = { 0 };
 const void *const Class_Player = &_Class_Player;
 
+float timeJump = 0.0f;
+float timerDelayedJump = 0.1f;
+
 void Class_InitPlayer()
 {
     if (!Class_IsInitialized(Class_Player))
@@ -329,13 +332,13 @@ void Player_VM_FixedUpdate(void *self)
 
     if (hitL.collider != NULL)
     {
-        // Le rayon gauche à touché le sol
+        // Le rayon gauche a touché le sol
         onGround = true;
         gndNormal = hitL.normal;
     }
     if (hitR.collider != NULL)
     {
-        // Le rayon droit à touché le sol
+        // Le rayon droit a touché le sol
         onGround = true;
         gndNormal = hitR.normal;
     }
@@ -403,14 +406,30 @@ void Player_VM_FixedUpdate(void *self)
     float maxHSpeed = 9.f;
     velocity.x = Float_Clamp(velocity.x, -maxHSpeed, maxHSpeed);
 
-    // Saut
+    // Saut classique + temps du saut
     if (player->m_jump & onGround)
     {
         player->m_jump = false;
         velocity.y = 15.0f;
+        timeJump = g_time->m_currentTime;
     }
 
-    if (controls->jumpDown)
+    // Barre d'espace appuyée en l'air + moment de l'appui
+    if (player->m_jump && !onGround)
+    {
+        player->m_jump = false;
+        timerDelayedJump = g_time->m_currentTime;
+    }
+
+
+    if (onGround && g_time->m_currentTime - timerDelayedJump < 0.1f)
+    {
+        velocity.y = 15.0f;
+        timeJump = g_time->m_currentTime;
+        timerDelayedJump = 0.1f;
+    }
+
+    if (controls->jumpDown && g_time->m_currentTime - timeJump < 0.2f)
     {
         PE_Body_SetGravityScale(body, 0.5f);
     }
