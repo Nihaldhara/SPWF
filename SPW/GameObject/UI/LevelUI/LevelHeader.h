@@ -21,7 +21,8 @@ typedef struct LevelHeader_s
         UIObject base;
     } m_super;
 
-    Text *m_fireflyCountText;
+    Text* m_fireflyCountText;
+    Text *m_heartCountText;
 
 } LevelHeader;
 

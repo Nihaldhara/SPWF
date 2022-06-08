@@ -16,7 +16,7 @@ typedef enum NutState_e
 {
     NUT_IDLE,
     NUT_SPINNING,
-    //NUT_DYING
+    NUT_DYING
 } NutState;
 
 typedef struct Nut_s
@@ -28,6 +28,8 @@ typedef struct Nut_s
     RE_Animator *m_animator;
 
     int m_state;
+
+    float m_speed;
 
 } Nut;
 

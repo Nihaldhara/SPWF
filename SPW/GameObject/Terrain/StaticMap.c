@@ -277,12 +277,50 @@ void StaticMap_InitTiles(void *self)
             {
                 if (StaticMap_IsGround(map, x, y + 1) == false)
                 {
-                    tiles[x][y].m_partIdx = 1;
+                    if (StaticMap_IsGround(map, x - 1, y) == false)
+                    {
+                        tiles[x][y].m_partIdx = 0;
+                    }
+
+                    else if (StaticMap_IsGround(map, x + 1, y) == false)
+                    {
+                        tiles[x][y].m_partIdx = 2;
+                    }
+
+                    else if (x == 0)
+                    {
+                        tiles[x][y].m_partIdx = 0;
+                    }
+
+                    else
+                    {
+                        tiles[x][y].m_partIdx = 1;
+                    }
                 }
                 else
                 {
-                    tiles[x][y].m_partIdx = 4;
+                    if (StaticMap_IsGround(map, x - 1, y) == false)
+                    {
+                        tiles[x][y].m_partIdx = 3;
+                    }
+
+                    else if (StaticMap_IsGround(map, x + 1, y) == false)
+                    {
+                        tiles[x][y].m_partIdx = 5;
+                    }
+
+                    else if (x == 0)
+                    {
+                        tiles[x][y].m_partIdx = 3;
+                    }
+
+                    else
+                    {
+                        tiles[x][y].m_partIdx = 4;
+                    }
                 }
+
+                
             }
         }
     }

@@ -22,7 +22,7 @@ typedef enum PlayerState_e
     PLAYER_RUNNING,
     PLAYER_SKIDDING,
     PLAYER_DYING,
-    PLAYER_INVINCIBLE
+    PLAYER_WOUNDED
 } PlayerState;
 
 typedef struct Player_s

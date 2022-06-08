@@ -60,11 +60,11 @@ void LevelHeader_Constructor(void *self, void *scene)
     UIObject_SetLocalRect(panel, rect);
 
     // Image du nombre de luciolles
-    RE_Atlas *uiAtlas = AssetManager_GetUIAtlas(assets);
-    RE_AtlasPart *part = RE_Atlas_GetPart(uiAtlas, "Firefly");
+    RE_Atlas* uiAtlas = AssetManager_GetUIAtlas(assets);
+    RE_AtlasPart* part = RE_Atlas_GetPart(uiAtlas, "Firefly");
     AssertNew(part);
 
-    Image *fireflyImg = Scene_AllocateObject(scene, Class_Image);
+    Image* fireflyImg = Scene_AllocateObject(scene, Class_Image);
     AssertNew(fireflyImg);
 
     Image_Constructor(fireflyImg, scene, part, 0);
@@ -76,7 +76,7 @@ void LevelHeader_Constructor(void *self, void *scene)
     GameObject_SetParent(fireflyImg, panel);
 
     // Compteur du nombre de luciolles
-    Text *fireflyCountText = Scene_AllocateObject(scene, Class_Text);
+    Text* fireflyCountText = Scene_AllocateObject(scene, Class_Text);
     AssertNew(fireflyCountText);
     Text_Constructor(fireflyCountText, scene, "0", font, normalColor);
     Text_SetAnchor(fireflyCountText, RE_ANCHOR_LEFT | RE_ANCHOR_MIDDLE);
@@ -87,6 +87,35 @@ void LevelHeader_Constructor(void *self, void *scene)
     UIObject_SetLocalRect(fireflyCountText, rect);
     GameObject_SetParent(fireflyCountText, panel);
     panel->m_fireflyCountText = fireflyCountText;
+
+    // Image du nombre de coeurs
+    part = RE_Atlas_GetPart(uiAtlas, "Heart");
+    AssertNew(part);
+
+    Image* heartImg = Scene_AllocateObject(scene, Class_Image);
+    AssertNew(heartImg);
+
+    Image_Constructor(heartImg, scene, part, 0);
+    rect.m_anchorMin = Vec2_Set(0.0f, 0.0f);
+    rect.m_anchorMax = Vec2_Set(0.0f, 0.0f);
+    rect.m_offsetMin = Vec2_Set(0.0f, sep + imgH);
+    rect.m_offsetMax = Vec2_Set(imgW, imgH + sep + imgH);
+    UIObject_SetLocalRect(heartImg, rect);
+    GameObject_SetParent(heartImg, panel);
+
+    // Compteur du nombre de coeurs
+    Text* heartCountText = Scene_AllocateObject(scene, Class_Text);
+    AssertNew(heartCountText);
+    Text_Constructor(heartCountText, scene, "0", font, normalColor);
+    Text_SetAnchor(heartCountText, RE_ANCHOR_LEFT | RE_ANCHOR_MIDDLE);
+    rect.m_anchorMin = Vec2_Set(0.0f, 0.0f);
+    rect.m_anchorMax = Vec2_Set(0.0f, 0.0f);
+    rect.m_offsetMin = Vec2_Set(imgW + sep, sep + imgH);
+    rect.m_offsetMax = Vec2_Set(imgW + sep + numW, imgH + sep + imgH);
+    UIObject_SetLocalRect(heartCountText, rect);
+    GameObject_SetParent(heartCountText, panel);
+    panel->m_heartCountText = heartCountText;
+
 }
 
 void LevelHeader_VM_Destructor(void *self)
@@ -109,4 +138,8 @@ void LevelHeader_VM_Update(void *self)
     count = Player_GetFireflyCount(player);
     sprintf(str, "%d", count);
     Text_SetString(panel->m_fireflyCountText, str);
+
+    count = Player_GetHeartCount(player);
+    sprintf(str, "%d", count);
+    Text_SetString(panel->m_heartCountText, str);
 }

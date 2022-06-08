@@ -91,6 +91,13 @@ void Player_OnCollisionStay(PE_Collision *collision)
     PE_Collider *otherCollider = PE_Collision_GetOtherCollider(collision);
     Player *player = (Player *)GameBody_GetFromBody(thisBody);
 
+    if (player->m_state == PLAYER_DYING)
+    {
+
+        PE_Collision_SetEnabled(collision, false);
+        return;
+    }
+
     if (PE_Collider_CheckCategory(otherCollider, FILTER_COLLECTABLE))
     {
         // Désactive la collision avec un objet
@@ -166,13 +173,11 @@ void Player_CreateAnimator(Player *player, void *scene)
     AssertNew(anim);
     RE_Animation_SetCycleCount(anim, -1);
 
-    //Animation "God Mode"
-    part = RE_Animator_CreateAlphaAnim(animator, "God Mode", 0.5, 1);
-
+    // Animation "Wounded"
+    anim = RE_Animator_CreateAlphaAnim(player->m_animator, "Wounded", 0.5, 1);
     AssertNew(anim);
-    RE_Animation_AddFlags(anim, RE_ANIM_ALTERNATE);
-    RE_Animation_SetCycleTime(anim, 0.3f);
-    RE_Animation_SetCycleCount(anim, -1);
+    RE_Animation_SetCycleCount(anim, 4);
+    RE_Animation_SetCycleTime(anim, 0.4f);
 }
 
 void Player_Constructor(void *self, void *scene)
@@ -247,23 +252,40 @@ void Player_VM_Start(void *self)
     RE_Animator_PlayAnimation(player->m_animator, "Idle");
 }
 
-void Player_Damage(Player *player)
+void Player_Damage(Player* player)
 {
     // Méthode appellée par un ennemi qui touche le joueur
-    player->m_heartCount--;
-    player->m_godMode = true;
+    if (player->m_damageDelay > 0.f)
+    {
+        return;
+    }
+    else if (player->m_damageDelay < 0.f)
+    {
+        player->m_damageDelay = 2.f;
+        player->m_godMode = false;
+        player->m_state = PLAYER_WOUNDED;
+        player->m_heartCount--;
+        if (player->m_heartCount <= 0)
+            player->m_state = PLAYER_DYING;
+        return;
+    }
 }
 
-void Player_Kill(Player *player)
+void Player_Kill(Player* player)
 {
-    Scene *scene = GameObject_GetScene((GameObject *)player);
-    Scene_Respawn(scene);
+    Scene* scene = GameObject_GetScene((GameObject*)player);
+    RE_Animator_PlayAnimation(player->m_animator, "Dying");
 }
 
 void Player_AddFirefly(void *self)
 {
     Player *player = Object_Cast(self, Class_Player);
     player->m_fireflyCount++;
+    if (player->m_fireflyCount >= 20)
+    {
+        player->m_heartCount++;
+        player->m_fireflyCount -= 20;
+    }
 }
 
 void Player_AddHeart(void *self)
@@ -317,9 +339,16 @@ void Player_VM_FixedUpdate(void *self)
     // Tue le joueur s'il tombe dans un trou
     if (position.y < -2.0f)
     {
-        Player_Kill(player);
+        player->m_fireflyCount = 0;
+        Scene_Respawn(scene);
         return;
     }
+    if (player->m_state == PLAYER_DYING)
+    {
+        RE_Animator_PlayAnimation(player->m_animator, "Dying");
+        return;
+    }
+
     // Tue le joueur s'il n'a plus de vies
     if (player->m_heartCount <= 0)
     {
@@ -365,6 +394,11 @@ void Player_VM_FixedUpdate(void *self)
     // Etat du joueur
 
     // Détermine l'état du joueur et change l'animation si nécessaire
+    if (player->m_state == PLAYER_WOUNDED)
+    {
+        RE_Animator_PlayAnimation(player->m_animator, "Wounded");
+    }
+
     if (onGround)
     {
         //Si le joueur n'appuie sur aucune touche, l'ibijau ne bouge pas
@@ -399,15 +433,10 @@ void Player_VM_FixedUpdate(void *self)
         }
     }
 
+    
+
     //Si le joueur a été touché par un ennemi, il a deux secondes d'invincibilité
-    /*if (player->m_godMode & player->m_damageDelay >= 0.0f)
-    {
-        player->m_state = PLAYER_INVINCIBLE;
-    }
-    else
-    {
-        player->m_godMode = false;
-    }*/
+    
 
     // Orientation du joueur
     // Utilisez player->m_hDirection qui vaut :
@@ -432,23 +461,10 @@ void Player_VM_FixedUpdate(void *self)
     float maxHSpeed = 9.f;
     velocity.x = Float_Clamp(velocity.x, -maxHSpeed, maxHSpeed);
 
-
-    ///////////////////////
-    //player->m_delay = 0.3f;
-
-    //player->m_delay -= Scene_GetFixedTimeStep(scene);
-
-
-    //////////////////////
-
     player->m_jumpingDelay -= Scene_GetFixedTimeStep(scene);
     player->m_fallingDelay -= Scene_GetFixedTimeStep(scene);
     player->m_damageDelay -= Scene_GetFixedTimeStep(scene);
     player->m_jumpingTime += Scene_GetFixedTimeStep(scene);
-
-    printf("jumpingDelay = %f ", player->m_jumpingDelay);
-    printf("fallingDelay = %f\n", player->m_fallingDelay);
-    //printf("damageDelay = %f\n", player->m_damageDelay);
 
     // Saut classique
     if (player->m_jump & onGround)
@@ -461,27 +477,30 @@ void Player_VM_FixedUpdate(void *self)
     // Saut juste avant contact au sol
     if (player->m_jump & !onGround)
     {
-        player->m_jumpingDelay = 0.3f;
+        player->m_jumpingDelay = 0.2f;
+        if (player->m_fallingDelay < 0.0f)
+        {
+            player->m_jump = false;
+        }
     }
 
-    if (onGround & player->m_jumpingDelay >= 0.0f)
+    if (onGround & player->m_jumpingDelay > 0.0f)
     {
         velocity.y = 15.0f;
         player->m_jumpingTime = 0.3f;
-        player->m_jump = false;
     }
 
     //Saut juste après chute libre
     if (onGround & !player->m_jump)
     {
-        player->m_fallingDelay = 0.3f;
+        player->m_fallingDelay = 0.1f;
     }
 
-    if (!onGround && player->m_jump && player->m_fallingDelay >= 0.0f)
+    if (!onGround && player->m_jump && player->m_fallingDelay > 0.0f)
     {
+        player->m_jump = false;
         velocity.y = 15.0f;
         player->m_jumpingTime = 0.3f;
-        player->m_jump = false;
     }
 
     //Saut court/long
@@ -494,12 +513,17 @@ void Player_VM_FixedUpdate(void *self)
         PE_Body_SetGravityScale(body, 1.0f);
     }
 
+    //if (controls->goDownDown & )
+
     // Rebond sur les ennemis
     if (player->m_bounce)
     {
         velocity.y = 15.0f;
         player->m_bounce = false;
     }
+
+    //Invincibilité
+    
 
     // Remarques :
     // Le facteur de gravité peut être modifié avec l'instruction

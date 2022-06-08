@@ -67,6 +67,15 @@ void Nut_CreateAnimator(Nut *nut, void *scene)
     anim = RE_Animator_CreateTextureAnim(animator, "Idle", part);
     AssertNew(anim);
     RE_Animation_SetCycleCount(anim, 0);
+
+    // Animation "Spinning"
+    part = RE_Atlas_GetPart(atlas, "NutSpinning");
+    AssertNew(part);
+
+    anim = RE_Animator_CreateTextureAnim(animator, "Spinning", part);
+    AssertNew(anim);
+    RE_Animation_SetCycleCount(anim, -1);
+    RE_Animation_SetCycleTime(anim, 0.5);
 }
 
 void Nut_Constructor(void *self, void *scene, PE_Vec2 startPos)
@@ -75,7 +84,8 @@ void Nut_Constructor(void *self, void *scene, PE_Vec2 startPos)
     Object_SetClass(self, Class_Nut);
 
     Nut *nut = Object_Cast(self, Class_Nut);
-    nut->m_state = NUT_IDLE;
+    nut->m_state = NUT_SPINNING;
+    nut->m_speed = -5.0f;
 
     Nut_CreateAnimator(nut, scene);
     Scene_SetToRespawn(scene, self, true);
@@ -104,7 +114,7 @@ void Nut_VM_Start(void *self)
     AssertNew(body);
 
     PE_ColliderDef_SetDefault(&colliderDef);
-    colliderDef.friction = 0.005f;
+    //colliderDef.friction = 0.005f;
     colliderDef.filter.categoryBits = FILTER_ENEMY;
     colliderDef.filter.maskBits = FILTER_TERRAIN | FILTER_PLAYER;
     PE_Shape_SetAsCircle(
@@ -125,9 +135,8 @@ void Nut_VM_Start(void *self)
     PE_Body_SetAwake(body, false);
 
     // Joue l'animation par défaut
-    RE_Animator_PlayAnimation(nut->m_animator, "Idle");
+    RE_Animator_PlayAnimation(nut->m_animator, "Spinning");
 }
-
 void Nut_VM_Damage(void *self, void *damager)
 {
     Nut *nut = Object_Cast(self, Class_Nut);
@@ -163,15 +172,23 @@ void Nut_OnCollisionStay(PE_Collision *collision)
     {
         Player *player = Object_Cast(otherGameBody, Class_Player);
         float angle = PE_Vec2_AngleDeg(manifold.normal, PE_Vec2_Down);
-        if (player->m_godMode)
-        {
-            return;
-        }
+
         if (angle > 55.0f)
         {
             Player_Damage(player);
+            nut->m_speed *= -1.0f;
         }
         return;
+    }
+
+    if (PE_Collider_CheckCategory(otherCollider, FILTER_TERRAIN))
+    {
+        float angle = PE_Vec2_AngleDeg(manifold.normal, PE_Vec2_Left);
+
+        if (angle == 180.0f)
+        {
+            nut->m_speed *= -1.0f;
+        }
     }
 }
 
@@ -226,11 +243,11 @@ void Nut_VM_FixedUpdate(void *self)
         PE_Body_SetAwake(body, false);
         return;
     }
-    else if (dist <= 5.0f && nut->m_state == NUT_IDLE)
+    else
     {
-        // Le joueur est à moins de 5 tuiles de la noisette
+        // La noisette tourne et bouge 
         nut->m_state = NUT_SPINNING;
-        velocity = PE_Vec2_Set(-3.f, 10.f);
+        velocity = PE_Vec2_Set(nut->m_speed, 0.0f);
     }
 
     PE_Body_SetVelocity(body, velocity);
