@@ -76,6 +76,14 @@ void Nut_CreateAnimator(Nut *nut, void *scene)
     AssertNew(anim);
     RE_Animation_SetCycleCount(anim, -1);
     RE_Animation_SetCycleTime(anim, 0.5);
+
+    // Animation "Idle"
+    part = RE_Atlas_GetPart(atlas, "NutDying");
+    AssertNew(part);
+
+    anim = RE_Animator_CreateTextureAnim(animator, "Dying", part);
+    AssertNew(anim);
+    RE_Animation_SetCycleCount(anim, -1);
 }
 
 void Nut_Constructor(void *self, void *scene, PE_Vec2 startPos)
@@ -142,12 +150,14 @@ void Nut_VM_Damage(void *self, void *damager)
     Nut *nut = Object_Cast(self, Class_Nut);
     Scene *scene = GameObject_GetScene(nut);
 
+    nut->m_state = NUT_DYING;
+
     if (Object_IsA(damager, Class_Player))
     {
         Player_Bounce(damager);
     }
 
-    Scene_DisableObject(scene, nut);
+    //Scene_DisableObject(scene, nut);
 }
 
 void Nut_VM_Destructor(void *self)
@@ -176,8 +186,12 @@ void Nut_OnCollisionStay(PE_Collision *collision)
         if (angle > 55.0f)
         {
             Player_Damage(player);
-            nut->m_speed *= -1.0f;
+            if (!PLAYER_WOUNDED)
+            {
+                nut->m_speed *= -1.0f;
+            }
         }
+
         return;
     }
 
@@ -185,10 +199,16 @@ void Nut_OnCollisionStay(PE_Collision *collision)
     {
         float angle = PE_Vec2_AngleDeg(manifold.normal, PE_Vec2_Left);
 
-        if (angle == 180.0f)
+        if (angle == 180.0f || angle == 0.0f)
         {
             nut->m_speed *= -1.0f;
         }
+    }
+
+    if (nut->m_state == NUT_DYING)
+    {   
+        PE_Collision_SetEnabled(collision, false);
+        return;
     }
 }
 
@@ -235,6 +255,12 @@ void Nut_VM_FixedUpdate(void *self)
 
     // Calcule la distance entre le joueur et la noisette
     float dist = PE_Vec2_Distance(position, playerPos);
+
+    if (nut->m_state == NUT_DYING)
+    {
+        RE_Animator_PlayAnimation(nut->m_animator, "Dying");
+        return;
+    }
 
     if (dist > 24.0f)
     {

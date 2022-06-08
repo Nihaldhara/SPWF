@@ -116,6 +116,11 @@ void Player_OnCollisionStay(PE_Collision *collision)
             PE_Collision_ResolveUp(collision);
         }
     }
+
+    if (PE_Collider_CheckCategory(otherCollider, FILTER_ENEMY) && (player->m_damageDelay > 0))
+    {
+        PE_Collision_SetEnabled(collision, false);
+    }
 }
 
 void Player_CreateAnimator(Player *player, void *scene)
@@ -520,10 +525,7 @@ void Player_VM_FixedUpdate(void *self)
     {
         velocity.y = 15.0f;
         player->m_bounce = false;
-    }
-
-    //Invincibilité
-    
+    }    
 
     // Remarques :
     // Le facteur de gravité peut être modifié avec l'instruction
