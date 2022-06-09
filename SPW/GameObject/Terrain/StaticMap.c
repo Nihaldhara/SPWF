@@ -95,7 +95,6 @@ void Spike_OnCollisionStay(PE_Collision *collision)
     if (Object_IsA(otherGameBody, Class_Player))
     {
         Player *player = Object_Cast(otherGameBody, Class_Player);
-        Player_Bounce(player);
         Player_Kill(player);
     }
 }
@@ -277,7 +276,17 @@ void StaticMap_InitTiles(void *self)
             {
                 if (StaticMap_IsGround(map, x, y + 1) == false)
                 {
-                    if (StaticMap_IsGround(map, x - 1, y) == false)
+                    if (x == 0)
+                    {
+                        tiles[x][y].m_partIdx = 0;
+                    }
+
+                    else if (x + 1 == width)
+                    {
+                        tiles[x][y].m_partIdx = 2;
+                    }
+
+                    else if (StaticMap_IsGround(map, x - 1, y) == false)
                     {
                         tiles[x][y].m_partIdx = 0;
                     }
@@ -287,11 +296,6 @@ void StaticMap_InitTiles(void *self)
                         tiles[x][y].m_partIdx = 2;
                     }
 
-                    else if (x == 0)
-                    {
-                        tiles[x][y].m_partIdx = 0;
-                    }
-
                     else
                     {
                         tiles[x][y].m_partIdx = 1;
@@ -299,7 +303,17 @@ void StaticMap_InitTiles(void *self)
                 }
                 else
                 {
-                    if (StaticMap_IsGround(map, x - 1, y) == false)
+                    if (x == 0)
+                    {
+                        tiles[x][y].m_partIdx = 3;
+                    }
+
+                    else if (x + 1 == width)
+                    {
+                        tiles[x][y].m_partIdx = 5;
+                    }
+
+                    else if (StaticMap_IsGround(map, x - 1, y) == false)
                     {
                         tiles[x][y].m_partIdx = 3;
                     }
@@ -307,11 +321,6 @@ void StaticMap_InitTiles(void *self)
                     else if (StaticMap_IsGround(map, x + 1, y) == false)
                     {
                         tiles[x][y].m_partIdx = 5;
-                    }
-
-                    else if (x == 0)
-                    {
-                        tiles[x][y].m_partIdx = 3;
                     }
 
                     else

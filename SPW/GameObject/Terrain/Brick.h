@@ -19,6 +19,8 @@ typedef struct Brick_s
         GameBody base;
     } m_super;
 
+    bool isBroken;
+
     RE_Animator *m_animator;
 } Brick;
 

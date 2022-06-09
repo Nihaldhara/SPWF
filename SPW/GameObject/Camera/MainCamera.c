@@ -110,6 +110,7 @@ void MainCamera_VM_Update(void *self)
 
     // Fixe la position verticale minimale de la caméra pour ne pas voir sous le sol
     lower.y = fmaxf(lower.y, 0.0f);
+    
 
     // Déplace la caméra vers la nouvelle position
     PE_AABB worldView = Camera_GetWorldView(mainCam);

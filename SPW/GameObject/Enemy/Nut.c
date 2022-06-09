@@ -191,7 +191,6 @@ void Nut_OnCollisionStay(PE_Collision *collision)
                 nut->m_speed *= -1.0f;
             }
         }
-
         return;
     }
 
@@ -203,6 +202,7 @@ void Nut_OnCollisionStay(PE_Collision *collision)
         {
             nut->m_speed *= -1.0f;
         }
+        return;
     }
 
     if (nut->m_state == NUT_DYING)

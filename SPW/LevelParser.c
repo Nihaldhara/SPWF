@@ -208,6 +208,13 @@ void LevelParser_InitScene(LevelParser *parser, void *scene)
                     GameBody_SaveStartPosition(player, PE_Vec2_Set((float)x + 0.5f, (float)y));
                 }
                 break;
+            case 'X':
+            {
+                Brick* brick = Scene_AllocateObject(scene, Class_Brick);
+                AssertNew(brick);
+                Brick_Constructor(brick, scene, PE_Vec2_Set((float)x, (float)y));
+                break;
+            }
             case 'o':
             {
                 Firefly *firefly = Scene_AllocateObject(scene, Class_Firefly);

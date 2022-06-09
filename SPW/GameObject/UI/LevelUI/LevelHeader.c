@@ -136,7 +136,7 @@ void LevelHeader_VM_Update(void *self)
     int count = 0;
 
     count = Player_GetFireflyCount(player);
-    sprintf(str, "%d", count);
+    sprintf(str, "%d / 15", count);
     Text_SetString(panel->m_fireflyCountText, str);
 
     count = Player_GetHeartCount(player);

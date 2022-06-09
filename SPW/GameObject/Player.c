@@ -183,6 +183,18 @@ void Player_CreateAnimator(Player *player, void *scene)
     AssertNew(anim);
     RE_Animation_SetCycleCount(anim, 4);
     RE_Animation_SetCycleTime(anim, 0.4f);
+
+    //Animation "Touching"
+    anim = RE_Animator_CreateScaleAnim(player->m_animator, "Touching", Vec2_Set(1.f, 0.85f), Vec2_Set(1.f, 1.f));
+    AssertNew(anim);
+    RE_Animation_SetCycleCount(anim, 1);
+    RE_Animation_SetCycleTime(anim, 0.2f);
+
+    //Animation "Jumping"
+    anim = RE_Animator_CreateScaleAnim(player->m_animator, "Jumping", Vec2_Set(1.f, 1.4f), Vec2_Set(1.f, 1.f));
+    AssertNew(anim);
+    RE_Animation_SetCycleCount(anim, 1);
+    RE_Animation_SetCycleTime(anim, 0.2f);
 }
 
 void Player_Constructor(void *self, void *scene)
@@ -406,6 +418,11 @@ void Player_VM_FixedUpdate(void *self)
 
     if (onGround)
     {
+        //Animation de réception au sol
+        if (player->m_state == PLAYER_FALLING)
+        {
+            RE_Animator_PlayAnimation(player->m_animator, "Touching");
+        }
         //Si le joueur n'appuie sur aucune touche, l'ibijau ne bouge pas
         if (player->m_hDirection == 0.0f && player->m_state != PLAYER_IDLE)
         {
@@ -437,11 +454,6 @@ void Player_VM_FixedUpdate(void *self)
             RE_Animator_PlayAnimation(player->m_animator, "Falling");
         }
     }
-
-    
-
-    //Si le joueur a été touché par un ennemi, il a deux secondes d'invincibilité
-    
 
     // Orientation du joueur
     // Utilisez player->m_hDirection qui vaut :
@@ -475,6 +487,7 @@ void Player_VM_FixedUpdate(void *self)
     if (player->m_jump & onGround)
     {
         player->m_jump = false;
+        RE_Animator_PlayAnimation(player->m_animator, "Jumping");
         velocity.y = 15.0f;
         player->m_jumpingTime = 0.3f;
     }
@@ -491,6 +504,7 @@ void Player_VM_FixedUpdate(void *self)
 
     if (onGround & player->m_jumpingDelay > 0.0f)
     {
+        RE_Animator_PlayAnimation(player->m_animator, "Jumping");
         velocity.y = 15.0f;
         player->m_jumpingTime = 0.3f;
     }
@@ -504,6 +518,7 @@ void Player_VM_FixedUpdate(void *self)
     if (!onGround && player->m_jump && player->m_fallingDelay > 0.0f)
     {
         player->m_jump = false;
+        RE_Animator_PlayAnimation(player->m_animator, "Jumping");
         velocity.y = 15.0f;
         player->m_jumpingTime = 0.3f;
     }
@@ -523,6 +538,7 @@ void Player_VM_FixedUpdate(void *self)
     // Rebond sur les ennemis
     if (player->m_bounce)
     {
+        RE_Animator_PlayAnimation(player->m_animator, "Jumping");
         velocity.y = 15.0f;
         player->m_bounce = false;
     }    
