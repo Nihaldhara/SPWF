@@ -51,13 +51,13 @@ void MainCamera_VM_Destructor(void *self)
     Object_SuperDestroy(self, Class_MainCamera);
 }
 
-void MainCamera_VM_OnRespawn(void *self)
+void MainCamera_VM_OnRespawn(void* self)
 {
-    MainCamera *mainCam = Object_Cast(self, Class_MainCamera);
-    Scene *scene = GameObject_GetScene(self);
-    Player *player = LevelScene_GetPlayer(scene);
+    MainCamera* mainCam = Object_Cast(self, Class_MainCamera);
+    Scene* scene = GameObject_GetScene(self);
+    Player* player = LevelScene_GetPlayer(scene);
 
-    mainCam->m_smoothedTarget = GameBody_GetStartPosition(player);
+    mainCam->m_smoothedTarget = LevelScene_GetStartPosition(scene);
     mainCam->m_centerVelocity = PE_Vec2_Zero;
 
     Camera_SetWorldView(mainCam, PE_AABB_Set(0.0f, 0.0f, 24.0f, 13.5f));

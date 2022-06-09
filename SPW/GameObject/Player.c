@@ -93,7 +93,6 @@ void Player_OnCollisionStay(PE_Collision *collision)
 
     if (player->m_state == PLAYER_DYING)
     {
-
         PE_Collision_SetEnabled(collision, false);
         return;
     }
@@ -219,27 +218,34 @@ void Player_Constructor(void *self, void *scene)
     player->m_damageDelay = 2.0f;
     player->m_jumpingTime = 0.0f;
 
+    player->m_onPlatform = false;
+
+    player->m_slope = 0;
+    player->m_resistance = 0;
+
     // Le joueur doit être réinitialisé à chaque fois qu'il meurt
     Scene_SetToRespawn(scene, player, true);
 
     Player_CreateAnimator(player, scene);
 }
 
-void Player_VM_Start(void *self)
+void Player_VM_Start(void* self)
 {
-    Player *player = Object_Cast(self, Class_Player);
-    Scene *scene = GameObject_GetScene(self);
+    Player* player = Object_Cast(self, Class_Player);
+    Scene* scene = GameObject_GetScene(self);
 
-    PE_World *world = Scene_GetWorld(scene);
-    PE_Body *body = NULL;
+    LevelScene_SetStartPosition(scene, GameBody_GetStartPosition(player));
+
+    PE_World* world = Scene_GetWorld(scene);
+    PE_Body* body = NULL;
     PE_BodyDef bodyDef = { 0 };
     PE_ColliderDef colliderDef = { 0 };
-    PE_Collider *collider = NULL;
+    PE_Collider* collider = NULL;
 
     // Crée le corps
     PE_BodyDef_SetDefault(&bodyDef);
     bodyDef.type = PE_DYNAMIC_BODY;
-    bodyDef.position = GameBody_GetStartPosition(player);
+    bodyDef.position = LevelScene_GetStartPosition(scene);
     bodyDef.name = "Player";
     bodyDef.xDamping = 0.0f;
     bodyDef.yDamping = 0.0f;
@@ -444,6 +450,11 @@ void Player_VM_FixedUpdate(void *self)
             player->m_state = PLAYER_SKIDDING;
             RE_Animator_PlayAnimation(player->m_animator, "Skidding");
         }
+
+        if (controls->goDownDown & player->m_onPlatform)
+        {
+            RE_Animator_PlayAnimation(player->m_animator, "Touching");
+        }
     }
     else
     {
@@ -477,6 +488,7 @@ void Player_VM_FixedUpdate(void *self)
     // Limite la vitesse horizontale
     float maxHSpeed = 9.f;
     velocity.x = Float_Clamp(velocity.x, -maxHSpeed, maxHSpeed);
+
 
     player->m_jumpingDelay -= Scene_GetFixedTimeStep(scene);
     player->m_fallingDelay -= Scene_GetFixedTimeStep(scene);
@@ -533,7 +545,10 @@ void Player_VM_FixedUpdate(void *self)
         PE_Body_SetGravityScale(body, 1.0f);
     }
 
-    //if (controls->goDownDown & )
+    if (controls->goDownDown & player->m_onPlatform)
+    {
+
+    }
 
     // Rebond sur les ennemis
     if (player->m_bounce)
@@ -552,14 +567,14 @@ void Player_VM_FixedUpdate(void *self)
     PE_Body_SetVelocity(body, velocity);
 }
 
-void Player_VM_OnRespawn(void *self)
+void Player_VM_OnRespawn(void* self)
 {
-    Player *player = Object_Cast(self, Class_Player);
-    PE_Body *body = GameBody_GetBody(self);
-    Scene *scene = GameObject_GetScene(self);
+    Player* player = Object_Cast(self, Class_Player);
+    PE_Body* body = GameBody_GetBody(self);
+    Scene* scene = GameObject_GetScene(self);
 
     AssertNew(body);
-    PE_Body_SetPosition(body, GameBody_GetStartPosition(player));
+    PE_Body_SetPosition(body, LevelScene_GetStartPosition(scene));
     PE_Body_SetVelocity(body, PE_Vec2_Zero);
 
     player->m_heartCount = 3;

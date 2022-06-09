@@ -77,7 +77,7 @@ void Nut_CreateAnimator(Nut *nut, void *scene)
     RE_Animation_SetCycleCount(anim, -1);
     RE_Animation_SetCycleTime(anim, 0.5);
 
-    // Animation "Idle"
+    // Animation "Dying"
     part = RE_Atlas_GetPart(atlas, "NutDying");
     AssertNew(part);
 
@@ -177,6 +177,12 @@ void Nut_OnCollisionStay(PE_Collision *collision)
     GameBody *otherGameBody = GameBody_GetFromBody(otherBody);
     Nut *nut = Object_Cast(thisGameBody, Class_Nut);
 
+    if (nut->m_state == NUT_DYING)
+    {
+        PE_Collision_SetEnabled(collision, false);
+        return;
+    }
+
     // Collision avec le joueur
     if (PE_Collider_CheckCategory(otherCollider, FILTER_PLAYER))
     {
@@ -205,11 +211,7 @@ void Nut_OnCollisionStay(PE_Collision *collision)
         return;
     }
 
-    if (nut->m_state == NUT_DYING)
-    {   
-        PE_Collision_SetEnabled(collision, false);
-        return;
-    }
+    
 }
 
 void Nut_VM_DrawGizmos(void *self)
@@ -264,7 +266,7 @@ void Nut_VM_FixedUpdate(void *self)
 
     if (dist > 24.0f)
     {
-        // La distance entre de joueur et la noisette vient de dépasser 24 tuiles.
+        // La distance entre le joueur et la noisette vient de dépasser 24 tuiles.
         // On endort la noisette pour ne plus la simuler dans le moteur physique.
         PE_Body_SetAwake(body, false);
         return;
@@ -293,7 +295,7 @@ void Nut_VM_OnRespawn(void *self)
     PE_Body_ClearForces(body);
 
     RE_Animator_StopAnimations(nut->m_animator);
-    RE_Animator_PlayAnimation(nut->m_animator, "Idle");
+    RE_Animator_PlayAnimation(nut->m_animator, "Spinning");
 }
 
 void Nut_VM_Render(void *self)

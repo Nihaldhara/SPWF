@@ -2,7 +2,7 @@
 //#define FULLSCREEN
 //#define FHD
 
-#define SKIP_MENU
+//#define SKIP_MENU
 #define DEFAUT_LEVEL 0
 
 #include "Settings.h"
@@ -14,17 +14,19 @@
 enum GameState_e
 {
     GAME_MAIN_MENU,
-    GAME_LEVEL
+    GAME_LEVEL1,
+    GAME_LEVEL2,
+    GAME_LEVEL_DEMO
 };
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     SPW_Init();
     LevelData_Init();
     Progress_Init();
 
-    SDL_Window  *window = NULL;
-    SDL_Renderer *renderer = NULL;
+    SDL_Window* window = NULL;
+    SDL_Renderer* renderer = NULL;
 
     // Crée la fenêtre et le moteur de rendu SDL
     int sdlFlags = 0;
@@ -68,11 +70,11 @@ int main(int argc, char *argv[])
 
     int state = GAME_MAIN_MENU;
 #ifdef SKIP_MENU
-    state = GAME_LEVEL;
+    state = GAME_LEVEL1;
 #endif
 
     // Boucle de jeu
-    Scene *scene = NULL;
+    Scene* scene = NULL;
     bool quitGame = false;
     while (!quitGame)
     {
@@ -86,11 +88,24 @@ int main(int argc, char *argv[])
         // Construction de la scène
         switch (state)
         {
-        case GAME_LEVEL:
+        case GAME_LEVEL1:
             scene = Object_Allocate(Class_LevelScene);
             AssertNew(scene);
             LevelScene_Constructor(scene, renderer, levelIdx);
             break;
+
+        case GAME_LEVEL2:
+            scene = Object_Allocate(Class_LevelScene);
+            AssertNew(scene);
+            LevelScene_Constructor(scene, renderer, levelIdx);
+            break;
+
+        case GAME_LEVEL_DEMO:
+            scene = Object_Allocate(Class_LevelScene);
+            AssertNew(scene);
+            LevelScene_Constructor(scene, renderer, levelIdx);
+            break;
+
 
         case GAME_MAIN_MENU:
         default:
@@ -126,7 +141,15 @@ int main(int argc, char *argv[])
 
         switch (state)
         {
-        case GAME_LEVEL:
+        case GAME_LEVEL1:
+            state = GAME_MAIN_MENU;
+            break;
+
+        case GAME_LEVEL2:
+            state = GAME_MAIN_MENU;
+            break;
+
+        case GAME_LEVEL_DEMO:
             state = GAME_MAIN_MENU;
             break;
 
@@ -136,8 +159,20 @@ int main(int argc, char *argv[])
             if (levelIdx < 0)
             {
                 quitGame = true;
+
             }
-            state = GAME_LEVEL;
+            if (levelIdx == 0)
+            {
+                state = GAME_LEVEL1;
+            }
+            if (levelIdx == 1)
+            {
+                state = GAME_LEVEL2;
+            }
+            if (levelIdx == 2)
+            {
+                state = GAME_LEVEL_DEMO;
+            }
             break;
         }
     }

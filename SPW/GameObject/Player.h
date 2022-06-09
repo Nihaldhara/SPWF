@@ -50,6 +50,12 @@ typedef struct Player_s
     float m_damageDelay;
     float m_jumpingTime;
 
+    bool m_onPlatform;
+    bool m_crouching;
+
+    int m_slope;
+    int m_resistance;
+
 } Player;
 
 #define PLAYER_DAMAGE_ANGLE 55.0f

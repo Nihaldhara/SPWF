@@ -7,12 +7,12 @@
 #include "LevelCanvas.h"
 
 // Object virtual methods
-void PauseControls_VM_Destructor(void *self);
+void PauseControls_VM_Destructor(void* self);
 
 // GameObject virtual methods
 
 static PauseControlsClass _Class_PauseControls = { 0 };
-const void *const Class_PauseControls = &_Class_PauseControls;
+const void* const Class_PauseControls = &_Class_PauseControls;
 
 void Class_InitPauseControls()
 {
@@ -20,7 +20,7 @@ void Class_InitPauseControls()
     {
         Class_InitUIObject();
 
-        void *self = (void *)Class_PauseControls;
+        void* self = (void*)Class_PauseControls;
         ClassCtorParams params = {
             .self = self,
             .super = Class_UIObject,
@@ -32,22 +32,22 @@ void Class_InitPauseControls()
     }
 }
 
-void PauseControls_ExecGoToMenu(void *self, void *data)
+void PauseControls_ExecGoToMenu(void* self, void* data)
 {
-    Scene *scene = data;
-    LevelCanvas *LevelCanvas = Object_Cast(LevelScene_GetCanvas(scene), Class_LevelCanvas);
+    Scene* scene = data;
+    LevelCanvas* LevelCanvas = Object_Cast(LevelScene_GetCanvas(scene), Class_LevelCanvas);
     LevelCanvas_OpenPauseMenu(LevelCanvas);
 }
 
-void PauseControls_Constructor(void *self, void *scene)
+void PauseControls_Constructor(void* self, void* scene)
 {
     UIObject_Constructor(self, scene);
     Object_SetClass(self, Class_PauseControls);
 
-    PauseControls *controls = Object_Cast(self, Class_PauseControls);
-    AssetManager *assets = Scene_GetAssetManager(scene);
-    TTF_Font *largeFont = AssetManager_GetLargeFont(assets);
-    TTF_Font *font = AssetManager_GetNormalFont(assets);
+    PauseControls* controls = Object_Cast(self, Class_PauseControls);
+    AssetManager* assets = Scene_GetAssetManager(scene);
+    TTF_Font* largeFont = AssetManager_GetLargeFont(assets);
+    TTF_Font* font = AssetManager_GetNormalFont(assets);
     SDL_Color mainColor = AssetManager_GetNormalColor(assets);
     SDL_Color black = { 0, 0, 0, 255 };
 
@@ -67,7 +67,7 @@ void PauseControls_Constructor(void *self, void *scene)
     rect.m_offsetMax = Vec2_Set(+0.5f * panelW, +0.5f * panelH);
     UIObject_SetLocalRect(controls, rect);
 
-    Text *text = Scene_AllocateObject(scene, Class_Text);
+    Text* text = Scene_AllocateObject(scene, Class_Text);
     AssertNew(text);
     Text_Constructor(text, scene, u8"Contrôles", largeFont, mainColor);
     Text_SetAnchor(text, RE_ANCHOR_TOP | RE_ANCHOR_CENTER);
@@ -80,15 +80,15 @@ void PauseControls_Constructor(void *self, void *scene)
     UIObject_SetLocalRect(text, rect);
     GameObject_SetParent(text, controls);
 
-    RE_Atlas *atlas = AssetManager_GetUIAtlas(assets);
-    RE_AtlasPart *buttonAtlas = RE_Atlas_GetPart(atlas, "Button");
+    RE_Atlas* atlas = AssetManager_GetUIAtlas(assets);
+    RE_AtlasPart* buttonAtlas = RE_Atlas_GetPart(atlas, "Button");
     AssertNew(buttonAtlas);
 
     float curY = topSkip;
-    char *labels[2] = { u8"Déplacement", u8"Saut" };
-    for (int i = 0; i < 2; ++i, curY += rowH + sep)
+    char* labels[2] = { u8"Déplacement : Flèches directionnelles", u8"                Saut : Espace" };
+    for (int i = 0; i < 2; ++i, curY += rowH + 2 * sep)
     {
-        Text *labelText = Scene_AllocateObject(scene, Class_Text);
+        Text* labelText = Scene_AllocateObject(scene, Class_Text);
         AssertNew(labelText);
         Text_Constructor(labelText, scene, labels[i], font, mainColor);
 
@@ -101,9 +101,9 @@ void PauseControls_Constructor(void *self, void *scene)
 
         Text_SetAnchor(labelText, RE_ANCHOR_TOP | RE_ANCHOR_LEFT);
     }
-
+    curY += topSkip - 2 * sep;
     {
-        Button *button = Scene_AllocateObject(scene, Class_Button);
+        Button* button = Scene_AllocateObject(scene, Class_Button);
         AssertNew(button);
         Button_Constructor(button, scene, buttonAtlas);
         Button_SetExec(button, PauseControls_ExecGoToMenu, scene);
@@ -124,10 +124,10 @@ void PauseControls_Constructor(void *self, void *scene)
     }
 }
 
-void PauseControls_VM_Destructor(void *self)
+void PauseControls_VM_Destructor(void* self)
 {
     // Tous les enfants sont supprimés automatiquement par la scène
-    PauseControls *controls = Object_Cast(self, Class_PauseControls);
+    PauseControls* controls = Object_Cast(self, Class_PauseControls);
 
     // Destructeur de la classe mère
     Object_SuperDestroy(self, Class_PauseControls);

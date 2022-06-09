@@ -18,6 +18,8 @@ typedef struct Heart_s
         Collectable base;
     } m_super;
 
+    float m_speed;
+
     RE_Animator *m_animator;
 } Heart;
 

@@ -124,6 +124,7 @@ void Brick_OnCollisionEnter(PE_Collision* collision)
     GameBody* otherGameBody = GameBody_GetFromBody(otherBody);
     Brick* brick = (Brick*)GameBody_GetFromBody(thisBody);
 
+    Scene* scene = GameObject_GetScene(brick);
 
     if (PE_Collider_CheckCategory(otherCollider, FILTER_PLAYER))
     {
@@ -132,8 +133,8 @@ void Brick_OnCollisionEnter(PE_Collision* collision)
 
         if (angle == 180.0f)
         {
-            brick->isBroken = true;
-            Player_Bounce(player);
+            Scene_SetToRespawn(scene, brick, true);
+            Scene_DisableObject(scene, brick);
         }
     }
 }
@@ -162,10 +163,4 @@ void Brick_VM_Update(void* self)
     Brick* brick = Object_Cast(self, Class_Brick);
     Scene* scene = GameObject_GetScene(brick);
     RE_Animator_Update(brick->m_animator, g_time);
-
-    if (brick->isBroken)
-    {
-        Scene_SetToRespawn(scene, brick, true);
-        Scene_DisableObject(scene, brick);
-    }
 }

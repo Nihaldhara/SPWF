@@ -95,7 +95,7 @@ void Spike_OnCollisionStay(PE_Collision *collision)
     if (Object_IsA(otherGameBody, Class_Player))
     {
         Player *player = Object_Cast(otherGameBody, Class_Player);
-        Player_Kill(player);
+        player->m_state = PLAYER_DYING;
     }
 }
 
@@ -175,6 +175,60 @@ void StaticMap_VM_Start(void *self)
                 vertices[0] = PE_Vec2_Set((float)x + 0.1f, (float)y);
                 vertices[1] = PE_Vec2_Set((float)x + 0.9f, (float)y);
                 vertices[2] = PE_Vec2_Set((float)x + 0.5f, (float)y + 0.8f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+            
+            case TILE_STEEP_SLOPE_L:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y);
+                vertices[2] = PE_Vec2_Set((float)x + 1.0f, (float)y + 1.0f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+
+            case TILE_STEEP_SLOPE_R:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y);
+                vertices[2] = PE_Vec2_Set((float)x, (float)y + 1.0f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+
+            case TILE_GENTLE_SLOPE_L1:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y);
+                vertices[2] = PE_Vec2_Set((float)x + 1.0f, (float)y + 0.5f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+
+            case TILE_GENTLE_SLOPE_L2:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y + 0.5f);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y + 0.5f);
+                vertices[2] = PE_Vec2_Set((float)x + 1.0f, (float)y + 1.0f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+
+            case TILE_GENTLE_SLOPE_R1:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y);
+                vertices[2] = PE_Vec2_Set((float)x, (float)y + 0.5f);
+
+                PE_Shape_SetAsPolygon(
+                    &colliderDef.shape, vertices, 3);
+                break;
+
+            case TILE_GENTLE_SLOPE_R2:
+                vertices[0] = PE_Vec2_Set((float)x, (float)y + 0.5f);
+                vertices[1] = PE_Vec2_Set((float)x + 1.0f, (float)y + 0.5f);
+                vertices[2] = PE_Vec2_Set((float)x, (float)y + 1.0f);
 
                 PE_Shape_SetAsPolygon(
                     &colliderDef.shape, vertices, 3);
@@ -330,6 +384,34 @@ void StaticMap_InitTiles(void *self)
                 }
 
                 
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_GENTLE_SLOPE_L1)
+            {
+                tiles[x][y].m_partIdx = 15;
+                tiles[x][y - 1].m_partIdx = 17;
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_GENTLE_SLOPE_L2)
+            {
+                tiles[x][y].m_partIdx = 16;
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_GENTLE_SLOPE_R1)
+            {
+                tiles[x][y].m_partIdx = 13;
+                tiles[x][y - 1].m_partIdx = 14;
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_GENTLE_SLOPE_R2)
+            {
+                tiles[x][y].m_partIdx = 12;
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_STEEP_SLOPE_L)
+            {
+                tiles[x][y].m_partIdx = 10;
+                tiles[x][y - 1].m_partIdx = 11;
+            }
+            else if (StaticMap_GetTileType(map, x, y) == TILE_STEEP_SLOPE_R)
+            {
+                tiles[x][y].m_partIdx = 9;
+                tiles[x][y - 1].m_partIdx = 8;
             }
         }
     }

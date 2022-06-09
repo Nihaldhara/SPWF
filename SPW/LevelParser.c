@@ -5,6 +5,7 @@
 
 #include "GameObject/Player.h"
 #include "GameObject/Collectable/Firefly.h"
+#include "GameObject/Collectable/Heart.h"
 #include "GameObject/Enemy/Nut.h"
 #include "GameObject/Terrain/Brick.h"
 #include "GameObject/Terrain/Bonus.h"
@@ -15,7 +16,9 @@
 
 static char validChar[] = {
     '\n', '\\', '/', 'L', 'l', 'R', 'r' , '.', '#', '=',
-    'W', 'C', 'e', 'S', 'X', 'o', '?', 'F', '+', 'M', 'B', 'A'
+    'W', 'C', 'e', 'S', 'X', 'o', '?', 'F', '+', 'M', 'B',
+    'A', 'P', 'p', '1', '2', '3', '4', '5', '6', '7', '8',
+    '9', '0'
 };
 
 LevelParser *LevelParser_New(char *path)
@@ -201,6 +204,24 @@ void LevelParser_InitScene(LevelParser *parser, void *scene)
             case 'A':
                 StaticMap_SetTile(map, x, y, TILE_SPIKE);
                 break;
+            case '1':
+                StaticMap_SetTile(map, x, y, TILE_GENTLE_SLOPE_R1);
+                break;
+            case '2':
+                StaticMap_SetTile(map, x, y, TILE_GENTLE_SLOPE_R2);
+                break;
+            case '3':
+                StaticMap_SetTile(map, x, y, TILE_GENTLE_SLOPE_L1);
+                break;
+            case '4':
+                StaticMap_SetTile(map, x, y, TILE_GENTLE_SLOPE_L2);
+                break;
+            case '5':
+                StaticMap_SetTile(map, x, y, TILE_STEEP_SLOPE_R);
+                break;
+            case '6':
+                StaticMap_SetTile(map, x, y, TILE_STEEP_SLOPE_L);
+                break;
             case 'S':
                 if (Object_IsA(scene, Class_LevelScene))
                 {
@@ -222,6 +243,13 @@ void LevelParser_InitScene(LevelParser *parser, void *scene)
                 Firefly_Constructor(firefly, scene, PE_Vec2_Set((float)x, (float)y));
                 break;
             }
+            case 'C':
+            {
+                Heart* heart = Scene_AllocateObject(scene, Class_Heart);
+                AssertNew(heart);
+                Heart_Constructor(heart, scene, PE_Vec2_Set((float)x, (float)y));
+                break;
+            }
             case 'F':
             {
                 LevelEnd *lvlEnd = Scene_AllocateObject(scene, Class_LevelEnd);
@@ -234,6 +262,51 @@ void LevelParser_InitScene(LevelParser *parser, void *scene)
                 Nut *nut = Scene_AllocateObject(scene, Class_Nut);
                 AssertNew(nut);
                 Nut_Constructor(nut, scene, PE_Vec2_Set((float)x + 0.5f, (float)y));
+                break;
+            }
+            case '\\':
+            {
+                Checkpoint* Checkpoint = Scene_AllocateObject(scene, Class_Checkpoint);
+                AssertNew(Checkpoint);
+                Checkpoint_Constructor(Checkpoint, scene, PE_Vec2_Set((float)x, (float)y));
+                break;
+            }
+            case 'P':
+            {
+                MovingPlatform* movingPlatform = Scene_AllocateObject(scene, Class_MovingPlatform);
+                AssertNew(movingPlatform);
+                PE_ColliderDef colliderDef = { 0 };
+                PE_ColliderDef_SetDefault(&colliderDef);
+                colliderDef.filter.categoryBits = FILTER_TERRAIN;
+                colliderDef.isOneWay = true;
+                PE_Shape_SetAsBox(&colliderDef.shape, -2.0f, -0.25f, 2.0f, 0.25f);
+                MovingPlatform_Constructor(movingPlatform, scene, PE_Vec2_Set((float)x, (float)y), &colliderDef);
+
+                MovingPlatform_SetPointCount(movingPlatform, 2);
+                PE_Vec2* points = MovingPlatform_GetPoints(movingPlatform);
+
+                points[0] = PE_Vec2_Set(x, y);
+                points[1] = PE_Vec2_Set(x, y + 3.0f);
+
+                break;
+            }
+            case 'p':
+            {
+                MovingPlatform* movingPlatform = Scene_AllocateObject(scene, Class_MovingPlatform);
+                AssertNew(movingPlatform);
+                PE_ColliderDef colliderDef = { 0 };
+                PE_ColliderDef_SetDefault(&colliderDef);
+                colliderDef.filter.categoryBits = FILTER_TERRAIN;
+                colliderDef.isOneWay = true;
+                PE_Shape_SetAsBox(&colliderDef.shape, -2.0f, -0.25f, 2.0f, 0.25f);
+                MovingPlatform_Constructor(movingPlatform, scene, PE_Vec2_Set((float)x, (float)y), &colliderDef);
+
+                MovingPlatform_SetPointCount(movingPlatform, 2);
+                PE_Vec2* points = MovingPlatform_GetPoints(movingPlatform);
+
+                points[0] = PE_Vec2_Set(x, y);
+                points[1] = PE_Vec2_Set(x + 3.0f, y);
+
                 break;
             }
             default:
